@@ -23,8 +23,8 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
         .replace(
           queryParameters: {
             ...uri.queryParameters,
-            'w': ImageScreenConstants.imageWidth,
-            'q': ImageScreenConstants.imageQuality,
+            'w': ImageScreenConstants.image.optimizationWidth,
+            'q': ImageScreenConstants.image.optimizationQuality,
           },
         )
         .toString();
@@ -57,7 +57,7 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
     try {
       final palette = await PaletteGenerator.fromImageProvider(
         imageProvider,
-        maximumColorCount: ImageScreenConstants.maxPaletteColors,
+        maximumColorCount: ImageScreenConstants.image.maxPaletteColors,
       );
       if (mounted && _lastProcessedUrl == imageUrl) {
         setState(() {
@@ -77,21 +77,21 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
   }
 
   Widget _buildImagePlaceholder() {
-    return const SizedBox(
-      width: ImageScreenConstants.imageSize,
-      height: ImageScreenConstants.imageSize,
-      child: Center(child: CircularProgressIndicator()),
+    return SizedBox(
+      width: ImageScreenConstants.image.size,
+      height: ImageScreenConstants.image.size,
+      child: const Center(child: CircularProgressIndicator()),
     );
   }
 
   Widget _buildImageError() {
     return Container(
-      width: ImageScreenConstants.imageSize,
-      height: ImageScreenConstants.imageSize,
+      width: ImageScreenConstants.image.size,
+      height: ImageScreenConstants.image.size,
       decoration: BoxDecoration(
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(
-          ImageScreenConstants.imageBorderRadius,
+          ImageScreenConstants.image.borderRadius,
         ),
       ),
       child: Column(
@@ -99,21 +99,18 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
         children: [
           Icon(
             Icons.broken_image,
-            size: ImageScreenConstants.errorIconSize,
+            size: ImageScreenConstants.layout.errorIconSize,
             color: Colors.grey[600],
           ),
-          const SizedBox(height: ImageScreenConstants.errorSpacingMedium),
+          SizedBox(height: ImageScreenConstants.layout.spacingMedium),
           Text(
-            ImageScreenConstants.errorMessagePrimary,
+            ImageScreenConstants.strings.errorMessagePrimary,
             style: TextStyle(color: Colors.grey[600]),
           ),
-          const SizedBox(height: ImageScreenConstants.errorSpacingSmall),
+          SizedBox(height: ImageScreenConstants.layout.spacingSmall),
           Text(
-            ImageScreenConstants.errorMessageSecondary,
-            style: TextStyle(
-              color: Colors.grey[500],
-              fontSize: ImageScreenConstants.errorSecondaryFontSize,
-            ),
+            ImageScreenConstants.strings.errorMessageSecondary,
+            style: TextStyle(color: Colors.grey[500], fontSize: 12.0),
           ),
         ],
       ),
@@ -122,24 +119,24 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
 
   Widget _buildImageContainer(ImageProvider imageProvider) {
     return Semantics(
-      label: ImageScreenConstants.imageSemanticLabel,
+      label: ImageScreenConstants.strings.imageSemanticLabel,
       image: true,
       child: AnimatedOpacity(
         opacity: _imageOpacity,
-        duration: ImageScreenConstants.imageFadeDuration,
+        duration: ImageScreenConstants.animation.imageFade,
         child: Container(
-          width: ImageScreenConstants.imageSize,
-          height: ImageScreenConstants.imageSize,
+          width: ImageScreenConstants.image.size,
+          height: ImageScreenConstants.image.size,
           decoration: BoxDecoration(
             image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
             borderRadius: BorderRadius.circular(
-              ImageScreenConstants.imageBorderRadius,
+              ImageScreenConstants.image.borderRadius,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(ImageScreenConstants.shadowAlpha),
-                blurRadius: ImageScreenConstants.shadowBlurRadius,
-                offset: ImageScreenConstants.shadowOffset,
+                color: Colors.black.withAlpha(51),
+                blurRadius: 10.0,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
@@ -153,7 +150,7 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
     final imageState = ref.watch(randomImageProvider);
 
     return AnimatedContainer(
-      duration: ImageScreenConstants.backgroundTransitionDuration,
+      duration: ImageScreenConstants.animation.backgroundTransition,
       color: _backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -161,7 +158,7 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
           title: Semantics(
             header: true,
             child: Text(
-              ImageScreenConstants.appTitle,
+              ImageScreenConstants.strings.appTitle,
               style: TextStyle(color: _getTextColorForBackground()),
             ),
           ),
@@ -199,13 +196,13 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
                     error: (error, stack) => Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.error,
-                          size: ImageScreenConstants.errorIconSize,
+                          size: ImageScreenConstants.layout.errorIconSize,
                           color: Colors.red,
                         ),
-                        const SizedBox(
-                          height: ImageScreenConstants.errorSpacingLarge,
+                        SizedBox(
+                          height: ImageScreenConstants.layout.spacingLarge,
                         ),
                         Text('Error: $error'),
                       ],
@@ -214,18 +211,18 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(
-                  ImageScreenConstants.buttonPadding,
+                padding: EdgeInsets.all(
+                  ImageScreenConstants.layout.buttonPadding,
                 ),
                 child: Semantics(
                   button: true,
                   enabled: !imageState.isLoading,
                   label: imageState.isLoading
-                      ? ImageScreenConstants.buttonSemanticLabelLoading
-                      : ImageScreenConstants.buttonSemanticLabelIdle,
+                      ? ImageScreenConstants.strings.buttonSemanticLabelLoading
+                      : ImageScreenConstants.strings.buttonSemanticLabelIdle,
                   child: SizedBox(
                     width: double.infinity,
-                    height: ImageScreenConstants.buttonHeight,
+                    height: ImageScreenConstants.layout.buttonHeight,
                     child: ElevatedButton(
                       onPressed: imageState.isLoading
                           ? null
@@ -235,15 +232,20 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
                                   .fetchNewImage();
                             },
                       child: imageState.isLoading
-                          ? const SizedBox(
-                              width: ImageScreenConstants.loadingIndicatorSize,
-                              height: ImageScreenConstants.loadingIndicatorSize,
+                          ? SizedBox(
+                              width: ImageScreenConstants
+                                  .layout
+                                  .loadingIndicatorSize,
+                              height: ImageScreenConstants
+                                  .layout
+                                  .loadingIndicatorSize,
                               child: CircularProgressIndicator(
-                                strokeWidth:
-                                    ImageScreenConstants.loadingIndicatorStroke,
+                                strokeWidth: ImageScreenConstants
+                                    .layout
+                                    .loadingIndicatorStroke,
                               ),
                             )
-                          : const Text(ImageScreenConstants.buttonLabel),
+                          : Text(ImageScreenConstants.strings.buttonLabel),
                     ),
                   ),
                 ),

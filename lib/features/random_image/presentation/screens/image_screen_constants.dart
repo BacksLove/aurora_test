@@ -1,53 +1,90 @@
 import 'package:flutter/material.dart';
 
+@immutable
 class ImageScreenConstants {
-  ImageScreenConstants._();
+  const ImageScreenConstants._();
 
-  // Image dimensions
-  static const double imageSize = 300.0;
+  static const image = _ImageConstants();
+  static const animation = _AnimationConstants();
+  static const layout = _LayoutConstants();
+  static const strings = _StringConstants();
+  static const styles = _StyleConstants();
+}
 
-  // Border radius
-  static const double imageBorderRadius = 16.0;
+@immutable
+class _ImageConstants {
+  const _ImageConstants();
 
-  // Durations
-  static const Duration backgroundTransitionDuration = Duration(
-    milliseconds: 500,
+  double get size => 300.0;
+  double get borderRadius => 16.0;
+  String get optimizationWidth => '600';
+  String get optimizationQuality => '80';
+  int get maxPaletteColors => 20;
+
+  BoxShadow get shadow => BoxShadow(
+    color: Colors.black.withAlpha(51),
+    blurRadius: 10.0,
+    offset: const Offset(0, 5),
   );
-  static const Duration imageFadeDuration = Duration(milliseconds: 300);
 
-  // Image optimization
-  static const String imageWidth = '600';
-  static const String imageQuality = '80';
+  BoxDecoration errorDecoration(BuildContext context) => BoxDecoration(
+    color: Colors.grey[300],
+    borderRadius: BorderRadius.circular(borderRadius),
+  );
+}
 
-  // Palette generation
-  static const int maxPaletteColors = 20;
+@immutable
+class _AnimationConstants {
+  const _AnimationConstants();
 
-  // Sizes
-  static const double errorIconSize = 50.0;
-  static const double buttonHeight = 50.0;
-  static const double buttonPadding = 32.0;
-  static const double loadingIndicatorSize = 24.0;
-  static const double loadingIndicatorStroke = 2.0;
+  Duration get backgroundTransition => const Duration(milliseconds: 500);
+  Duration get imageFade => const Duration(milliseconds: 300);
+}
 
-  // Spacing
-  static const double errorSpacingLarge = 16.0;
-  static const double errorSpacingMedium = 8.0;
-  static const double errorSpacingSmall = 4.0;
+@immutable
+class _LayoutConstants {
+  const _LayoutConstants();
 
-  // Text styles
-  static const double errorSecondaryFontSize = 12.0;
+  double get errorIconSize => 50.0;
+  double get buttonHeight => 50.0;
+  double get buttonPadding => 32.0;
+  double get loadingIndicatorSize => 24.0;
+  double get loadingIndicatorStroke => 2.0;
 
-  // Shadow
-  static const int shadowAlpha = 51; // 0.2 * 255
-  static const double shadowBlurRadius = 10.0;
-  static const Offset shadowOffset = Offset(0, 5);
+  EdgeInsets get buttonPaddingInsets => EdgeInsets.all(buttonPadding);
 
-  // Strings
-  static const String appTitle = 'Random Image';
-  static const String imageSemanticLabel = 'Random image from Unsplash';
-  static const String buttonLabel = 'Another';
-  static const String buttonSemanticLabelIdle = 'Load another random image';
-  static const String buttonSemanticLabelLoading = 'Loading new image';
-  static const String errorMessagePrimary = 'Image failed to load';
-  static const String errorMessageSecondary = 'Tap "Another" to try again';
+  double get spacingLarge => 16.0;
+  double get spacingMedium => 8.0;
+  double get spacingSmall => 4.0;
+
+  SizedBox get spacingLargeBox => SizedBox(height: spacingLarge);
+  SizedBox get spacingMediumBox => SizedBox(height: spacingMedium);
+  SizedBox get spacingSmallBox => SizedBox(height: spacingSmall);
+}
+
+@immutable
+class _StringConstants {
+  const _StringConstants();
+
+  String get appTitle => 'Random Image';
+  String get imageSemanticLabel => 'Random image from Unsplash';
+  String get buttonLabel => 'Another';
+  String get buttonSemanticLabelIdle => 'Load another random image';
+  String get buttonSemanticLabelLoading => 'Loading new image';
+  String get errorMessagePrimary => 'Image failed to load';
+  String get errorMessageSecondary => 'Tap "Another" to try again';
+  String errorFormat(Object error) => 'Error: $error';
+}
+
+@immutable
+class _StyleConstants {
+  const _StyleConstants();
+
+  TextStyle errorPrimaryStyle(BuildContext context) =>
+      TextStyle(color: Colors.grey[600], fontSize: 14.0);
+
+  TextStyle errorSecondaryStyle(BuildContext context) =>
+      TextStyle(color: Colors.grey[500], fontSize: 12.0);
+
+  Color errorIconColor(BuildContext context) => Colors.grey[600]!;
 }
