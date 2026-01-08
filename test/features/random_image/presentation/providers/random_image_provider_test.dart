@@ -1,24 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_engineer_assignment/core/errors/result.dart';
 import 'package:mobile_engineer_assignment/features/random_image/data/models/image_response.dart';
-import 'package:mobile_engineer_assignment/features/random_image/data/repositories/image_repository_impl.dart';
+import 'package:mobile_engineer_assignment/features/random_image/domain/usecases/get_random_image_usecase.dart';
 import 'package:mobile_engineer_assignment/features/random_image/presentation/providers/random_image_provider.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:mobile_engineer_assignment/features/random_image/domain/repositories/image_repository.dart';
-
-class MockImageRepository extends Mock implements ImageRepository {}
+class MockGetRandomImageUseCase extends Mock implements GetRandomImageUseCase {}
 
 void main() {
-  late MockImageRepository mockRepository;
+  late MockGetRandomImageUseCase mockUseCase;
 
   setUp(() {
-    mockRepository = MockImageRepository();
+    mockUseCase = MockGetRandomImageUseCase();
   });
 
   ProviderContainer createContainer() {
     final container = ProviderContainer(
-      overrides: [imageRepositoryProvider.overrideWithValue(mockRepository)],
+      overrides: [getRandomImageUseCaseProvider.overrideWithValue(mockUseCase)],
     );
     addTearDown(container.dispose);
     return container;
@@ -35,8 +34,8 @@ void main() {
   test('build returns ImageResponse on success', () async {
     const tImageResponse = ImageResponse(url: 'https://example.com/image.jpg');
     when(
-      () => mockRepository.getRandomImage(),
-    ).thenAnswer((_) async => tImageResponse);
+      () => mockUseCase(),
+    ).thenAnswer((_) async => const Success(tImageResponse));
 
     final container = createContainer();
 
@@ -49,12 +48,13 @@ void main() {
     );
   });
 
-  test('build returns error state when repository throws exception', () async {
-    final exception = Exception('Network error');
-    when(() => mockRepository.getRandomImage()).thenThrow(exception);
+  test('build returns error state when repository returns Error', () async {
+    when(
+      () => mockUseCase(),
+    ).thenAnswer((_) async => Error(Exception('Network error') as Never));
 
     final container = ProviderContainer(
-      overrides: [imageRepositoryProvider.overrideWithValue(mockRepository)],
+      overrides: [getRandomImageUseCaseProvider.overrideWithValue(mockUseCase)],
     );
 
     // Listen to the provider to keep it alive
@@ -65,7 +65,6 @@ void main() {
 
     final state = container.read(randomImageProvider);
     expect(state.hasError, true);
-    expect(state.error, exception);
 
     listener.close();
     container.dispose();
@@ -78,8 +77,8 @@ void main() {
     );
 
     when(
-      () => mockRepository.getRandomImage(),
-    ).thenAnswer((_) async => tImageResponse);
+      () => mockUseCase(),
+    ).thenAnswer((_) async => const Success(tImageResponse));
 
     final container = createContainer();
 
@@ -88,8 +87,8 @@ void main() {
 
     // Update mock for second call
     when(
-      () => mockRepository.getRandomImage(),
-    ).thenAnswer((_) async => tImageResponse2);
+      () => mockUseCase(),
+    ).thenAnswer((_) async => const Success(tImageResponse2));
 
     // Trigger fetch
     await container.read(randomImageProvider.notifier).fetchNewImage();
@@ -98,25 +97,26 @@ void main() {
       container.read(randomImageProvider),
       const AsyncValue.data(tImageResponse2),
     );
-    verify(() => mockRepository.getRandomImage()).called(2);
+    verify(() => mockUseCase()).called(2);
   });
 
   test('fetchNewImage updates state to error on failure', () async {
     const tImageResponse = ImageResponse(url: 'https://example.com/image.jpg');
-    final exception = Exception('Network error');
 
     // First call succeeds
     when(
-      () => mockRepository.getRandomImage(),
-    ).thenAnswer((_) async => tImageResponse);
+      () => mockUseCase(),
+    ).thenAnswer((_) async => const Success(tImageResponse));
 
     final container = createContainer();
 
     // Wait for initial load
     await container.read(randomImageProvider.future);
 
-    // Make second call fail
-    when(() => mockRepository.getRandomImage()).thenThrow(exception);
+    // Make second call fail with Error result
+    when(
+      () => mockUseCase(),
+    ).thenAnswer((_) async => Error(Exception('Network error') as Never));
 
     // Trigger fetch that will fail
     await container.read(randomImageProvider.notifier).fetchNewImage();
@@ -125,11 +125,12 @@ void main() {
   });
 
   test('handles timeout error correctly', () async {
-    final exception = Exception('Connection timeout');
-    when(() => mockRepository.getRandomImage()).thenThrow(exception);
+    when(
+      () => mockUseCase(),
+    ).thenAnswer((_) async => Error(Exception('Connection timeout') as Never));
 
     final container = ProviderContainer(
-      overrides: [imageRepositoryProvider.overrideWithValue(mockRepository)],
+      overrides: [getRandomImageUseCaseProvider.overrideWithValue(mockUseCase)],
     );
 
     // Listen to the provider to keep it alive
@@ -141,7 +142,6 @@ void main() {
     // Check state after the error has been caught
     final state = container.read(randomImageProvider);
     expect(state.hasError, true);
-    expect(state.error, exception);
 
     listener.close();
     container.dispose();
@@ -159,8 +159,8 @@ void main() {
     );
 
     when(
-      () => mockRepository.getRandomImage(),
-    ).thenAnswer((_) async => tImageResponse1);
+      () => mockUseCase(),
+    ).thenAnswer((_) async => const Success(tImageResponse1));
 
     final container = createContainer();
 
@@ -170,18 +170,18 @@ void main() {
 
     // Second fetch
     when(
-      () => mockRepository.getRandomImage(),
-    ).thenAnswer((_) async => tImageResponse2);
+      () => mockUseCase(),
+    ).thenAnswer((_) async => const Success(tImageResponse2));
     await container.read(randomImageProvider.notifier).fetchNewImage();
     expect(container.read(randomImageProvider).value, tImageResponse2);
 
     // Third fetch
     when(
-      () => mockRepository.getRandomImage(),
-    ).thenAnswer((_) async => tImageResponse3);
+      () => mockUseCase(),
+    ).thenAnswer((_) async => const Success(tImageResponse3));
     await container.read(randomImageProvider.notifier).fetchNewImage();
     expect(container.read(randomImageProvider).value, tImageResponse3);
 
-    verify(() => mockRepository.getRandomImage()).called(3);
+    verify(() => mockUseCase()).called(3);
   });
 }

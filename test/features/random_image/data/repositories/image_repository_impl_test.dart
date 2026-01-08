@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_engineer_assignment/core/errors/failures.dart';
+import 'package:mobile_engineer_assignment/core/errors/result.dart';
 import 'package:mobile_engineer_assignment/features/random_image/data/models/image_response.dart';
 import 'package:mobile_engineer_assignment/features/random_image/data/repositories/image_repository_impl.dart';
 import 'package:mocktail/mocktail.dart';
@@ -20,7 +22,7 @@ void main() {
     final tResponseData = {'url': 'https://example.com/image.jpg'};
 
     test(
-      'should return ImageResponse when the call to remote data source is successful',
+      'should return Success with ImageResponse when the call to remote data source is successful',
       () async {
         // Arrange
         when(() => mockDio.get(any())).thenAnswer(
@@ -35,98 +37,77 @@ void main() {
         final result = await repository.getRandomImage();
 
         // Assert
-        expect(result, tImageResponse);
+        expect(result, isA<Success<ImageResponse>>());
+        expect((result as Success<ImageResponse>).value, tImageResponse);
         verify(() => mockDio.get('/image')).called(1);
       },
     );
 
     test(
-      'should throw an exception when the call to remote data source is unsuccessful',
+      'should return Error with NetworkFailure when the call has connection error',
       () async {
         // Arrange
         when(() => mockDio.get(any())).thenThrow(
-          DioException(requestOptions: RequestOptions(path: '/image')),
+          DioException(
+            requestOptions: RequestOptions(path: '/image'),
+            type: DioExceptionType.connectionError,
+            error: 'Network error',
+          ),
         );
 
         // Act
-        final call = repository.getRandomImage;
+        final result = await repository.getRandomImage();
 
         // Assert
-        expect(() => call(), throwsA(isA<DioException>()));
+        expect(result, isA<Error<ImageResponse>>());
+        expect((result as Error<ImageResponse>).failure, isA<NetworkFailure>());
       },
     );
 
-    test('should throw DioException on network error', () async {
-      // Arrange
-      when(() => mockDio.get(any())).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/image'),
-          type: DioExceptionType.connectionError,
-          error: 'Network error',
-        ),
-      );
-
-      // Act & Assert
-      expect(
-        () => repository.getRandomImage(),
-        throwsA(
-          isA<DioException>().having(
-            (e) => e.type,
-            'type',
-            DioExceptionType.connectionError,
+    test(
+      'should return Error with TimeoutFailure on connection timeout',
+      () async {
+        // Arrange
+        when(() => mockDio.get(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/image'),
+            type: DioExceptionType.connectionTimeout,
+            error: 'Connection timeout',
           ),
-        ),
-      );
-    });
+        );
 
-    test('should throw DioException on connection timeout', () async {
-      // Arrange
-      when(() => mockDio.get(any())).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/image'),
-          type: DioExceptionType.connectionTimeout,
-          error: 'Connection timeout',
-        ),
-      );
+        // Act
+        final result = await repository.getRandomImage();
 
-      // Act & Assert
-      expect(
-        () => repository.getRandomImage(),
-        throwsA(
-          isA<DioException>().having(
-            (e) => e.type,
-            'type',
-            DioExceptionType.connectionTimeout,
-          ),
-        ),
-      );
-    });
-
-    test('should throw DioException on receive timeout', () async {
-      // Arrange
-      when(() => mockDio.get(any())).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/image'),
-          type: DioExceptionType.receiveTimeout,
-          error: 'Receive timeout',
-        ),
-      );
-
-      // Act & Assert
-      expect(
-        () => repository.getRandomImage(),
-        throwsA(
-          isA<DioException>().having(
-            (e) => e.type,
-            'type',
-            DioExceptionType.receiveTimeout,
-          ),
-        ),
-      );
-    });
+        // Assert
+        expect(result, isA<Error<ImageResponse>>());
+        expect((result as Error<ImageResponse>).failure, isA<TimeoutFailure>());
+      },
+    );
 
     test(
-      'should throw exception on invalid response data (missing url)',
+      'should return Error with TimeoutFailure on receive timeout',
+      () async {
+        // Arrange
+        when(() => mockDio.get(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/image'),
+            type: DioExceptionType.receiveTimeout,
+            error: 'Receive timeout',
+          ),
+        );
+
+        // Act
+        final result = await repository.getRandomImage();
+
+        // Assert
+        expect(result, isA<Error<ImageResponse>>());
+        expect((result as Error<ImageResponse>).failure, isA<TimeoutFailure>());
+      },
+    );
+
+    test(
+      'should return Error with UnexpectedFailure on invalid response data (missing url)',
       () async {
         // Arrange
         when(() => mockDio.get(any())).thenAnswer(
@@ -137,26 +118,43 @@ void main() {
           ),
         );
 
-        // Act & Assert
-        expect(() => repository.getRandomImage(), throwsA(isA<TypeError>()));
+        // Act
+        final result = await repository.getRandomImage();
+
+        // Assert
+        expect(result, isA<Error<ImageResponse>>());
+        expect(
+          (result as Error<ImageResponse>).failure,
+          isA<UnexpectedFailure>(),
+        );
       },
     );
 
-    test('should throw exception on null response data', () async {
-      // Arrange
-      when(() => mockDio.get(any())).thenAnswer(
-        (_) async => Response(
-          data: null,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: '/image'),
-        ),
-      );
+    test(
+      'should return Error with UnexpectedFailure on null response data',
+      () async {
+        // Arrange
+        when(() => mockDio.get(any())).thenAnswer(
+          (_) async => Response(
+            data: null,
+            statusCode: 200,
+            requestOptions: RequestOptions(path: '/image'),
+          ),
+        );
 
-      // Act & Assert
-      expect(() => repository.getRandomImage(), throwsA(isA<TypeError>()));
-    });
+        // Act
+        final result = await repository.getRandomImage();
 
-    test('should throw DioException on 404 error', () async {
+        // Assert
+        expect(result, isA<Error<ImageResponse>>());
+        expect(
+          (result as Error<ImageResponse>).failure,
+          isA<UnexpectedFailure>(),
+        );
+      },
+    );
+
+    test('should return Error with ServerFailure on 404 error', () async {
       // Arrange
       when(() => mockDio.get(any())).thenThrow(
         DioException(
@@ -169,66 +167,82 @@ void main() {
         ),
       );
 
-      // Act & Assert
-      expect(
-        () => repository.getRandomImage(),
-        throwsA(
-          isA<DioException>().having(
-            (e) => e.response?.statusCode,
-            'statusCode',
-            404,
-          ),
-        ),
-      );
+      // Act
+      final result = await repository.getRandomImage();
+
+      // Assert
+      expect(result, isA<Error<ImageResponse>>());
+      final failure = (result as Error<ImageResponse>).failure;
+      expect(failure, isA<ServerFailure>());
+      expect((failure as ServerFailure).statusCode, 404);
     });
 
-    test('should throw DioException on 500 server error', () async {
-      // Arrange
-      when(() => mockDio.get(any())).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/image'),
-          type: DioExceptionType.badResponse,
-          response: Response(
-            statusCode: 500,
+    test(
+      'should return Error with ServerFailure on 500 server error',
+      () async {
+        // Arrange
+        when(() => mockDio.get(any())).thenThrow(
+          DioException(
             requestOptions: RequestOptions(path: '/image'),
+            type: DioExceptionType.badResponse,
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: '/image'),
+            ),
           ),
-        ),
-      );
+        );
 
-      // Act & Assert
-      expect(
-        () => repository.getRandomImage(),
-        throwsA(
-          isA<DioException>().having(
-            (e) => e.response?.statusCode,
-            'statusCode',
-            500,
+        // Act
+        final result = await repository.getRandomImage();
+
+        // Assert
+        expect(result, isA<Error<ImageResponse>>());
+        final failure = (result as Error<ImageResponse>).failure;
+        expect(failure, isA<ServerFailure>());
+        expect((failure as ServerFailure).statusCode, 500);
+      },
+    );
+
+    test(
+      'should return Error with CancelledFailure on cancel request',
+      () async {
+        // Arrange
+        when(() => mockDio.get(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/image'),
+            type: DioExceptionType.cancel,
+            error: 'Request cancelled',
           ),
-        ),
-      );
-    });
+        );
 
-    test('should throw DioException on cancel request', () async {
+        // Act
+        final result = await repository.getRandomImage();
+
+        // Assert
+        expect(result, isA<Error<ImageResponse>>());
+        expect(
+          (result as Error<ImageResponse>).failure,
+          isA<CancelledFailure>(),
+        );
+      },
+    );
+
+    test('should return Error with TimeoutFailure on send timeout', () async {
       // Arrange
       when(() => mockDio.get(any())).thenThrow(
         DioException(
           requestOptions: RequestOptions(path: '/image'),
-          type: DioExceptionType.cancel,
-          error: 'Request cancelled',
+          type: DioExceptionType.sendTimeout,
+          error: 'Send timeout',
         ),
       );
 
-      // Act & Assert
-      expect(
-        () => repository.getRandomImage(),
-        throwsA(
-          isA<DioException>().having(
-            (e) => e.type,
-            'type',
-            DioExceptionType.cancel,
-          ),
-        ),
-      );
+      // Act
+      final result = await repository.getRandomImage();
+
+      // Assert
+      expect(result, isA<Error<ImageResponse>>());
+      expect((result as Error<ImageResponse>).failure, isA<TimeoutFailure>());
     });
   });
 }

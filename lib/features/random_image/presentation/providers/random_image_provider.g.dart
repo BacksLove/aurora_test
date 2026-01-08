@@ -33,7 +33,7 @@ final class RandomImageProvider
   RandomImage create() => RandomImage();
 }
 
-String _$randomImageHash() => r'4bc8b5e71f964ed881d78c57cd4a2ae9613eb721';
+String _$randomImageHash() => r'f1cdf560c06f212c76b721f6a983741fbc3478f9';
 
 abstract class _$RandomImage extends $AsyncNotifier<ImageResponse> {
   FutureOr<ImageResponse> build();

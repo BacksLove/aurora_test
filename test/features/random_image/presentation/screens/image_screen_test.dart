@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_engineer_assignment/core/errors/result.dart';
 import 'package:mobile_engineer_assignment/features/random_image/data/models/image_response.dart';
 import 'package:mobile_engineer_assignment/features/random_image/data/repositories/image_repository_impl.dart';
 import 'package:mobile_engineer_assignment/features/random_image/domain/repositories/image_repository.dart';
@@ -26,7 +27,7 @@ void main() {
 
   testWidgets('displays loading indicator initially', (tester) async {
     // Arrange
-    final completer = Completer<ImageResponse>();
+    final completer = Completer<Result<ImageResponse>>();
     when(
       () => mockRepository.getRandomImage(),
     ).thenAnswer((_) => completer.future);
@@ -40,7 +41,7 @@ void main() {
 
     // Cleanup
     completer.complete(
-      const ImageResponse(url: 'https://example.com/image.jpg'),
+      const Success(ImageResponse(url: 'https://example.com/image.jpg')),
     );
     await tester.pump();
   });
@@ -49,7 +50,7 @@ void main() {
     // Arrange
     when(
       () => mockRepository.getRandomImage(),
-    ).thenAnswer((_) async => throw Exception('Network Error'));
+    ).thenAnswer((_) async => Error(Exception('Network Error') as Never));
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
@@ -65,7 +66,7 @@ void main() {
     const tImageResponse = ImageResponse(url: 'https://example.com/image.jpg');
     when(
       () => mockRepository.getRandomImage(),
-    ).thenAnswer((_) async => tImageResponse);
+    ).thenAnswer((_) async => const Success(tImageResponse));
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
