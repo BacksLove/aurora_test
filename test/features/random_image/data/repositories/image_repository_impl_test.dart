@@ -19,35 +19,41 @@ void main() {
     const tImageResponse = ImageResponse(url: 'https://example.com/image.jpg');
     final tResponseData = {'url': 'https://example.com/image.jpg'};
 
-    test('should return ImageResponse when the call to remote data source is successful', () async {
-      // Arrange
-      when(() => mockDio.get(any())).thenAnswer(
-        (_) async => Response(
-          data: tResponseData,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: '/image'),
-        ),
-      );
+    test(
+      'should return ImageResponse when the call to remote data source is successful',
+      () async {
+        // Arrange
+        when(() => mockDio.get(any())).thenAnswer(
+          (_) async => Response(
+            data: tResponseData,
+            statusCode: 200,
+            requestOptions: RequestOptions(path: '/image'),
+          ),
+        );
 
-      // Act
-      final result = await repository.getRandomImage();
+        // Act
+        final result = await repository.getRandomImage();
 
-      // Assert
-      expect(result, tImageResponse);
-      verify(() => mockDio.get('/image')).called(1);
-    });
+        // Assert
+        expect(result, tImageResponse);
+        verify(() => mockDio.get('/image')).called(1);
+      },
+    );
 
-    test('should throw an exception when the call to remote data source is unsuccessful', () async {
-      // Arrange
-      when(() => mockDio.get(any())).thenThrow(DioException(
-        requestOptions: RequestOptions(path: '/image'),
-      ));
+    test(
+      'should throw an exception when the call to remote data source is unsuccessful',
+      () async {
+        // Arrange
+        when(() => mockDio.get(any())).thenThrow(
+          DioException(requestOptions: RequestOptions(path: '/image')),
+        );
 
-      // Act
-      final call = repository.getRandomImage;
+        // Act
+        final call = repository.getRandomImage;
 
-      // Assert
-      expect(() => call(), throwsA(isA<DioException>()));
-    });
+        // Assert
+        expect(() => call(), throwsA(isA<DioException>()));
+      },
+    );
   });
 }

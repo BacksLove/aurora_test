@@ -18,9 +18,7 @@ void main() {
 
   ProviderContainer createContainer() {
     final container = ProviderContainer(
-      overrides: [
-        imageRepositoryProvider.overrideWithValue(mockRepository),
-      ],
+      overrides: [imageRepositoryProvider.overrideWithValue(mockRepository)],
     );
     addTearDown(container.dispose);
     return container;
@@ -36,7 +34,9 @@ void main() {
 
   test('build returns ImageResponse on success', () async {
     const tImageResponse = ImageResponse(url: 'https://example.com/image.jpg');
-    when(() => mockRepository.getRandomImage()).thenAnswer((_) async => tImageResponse);
+    when(
+      () => mockRepository.getRandomImage(),
+    ).thenAnswer((_) async => tImageResponse);
 
     final container = createContainer();
 

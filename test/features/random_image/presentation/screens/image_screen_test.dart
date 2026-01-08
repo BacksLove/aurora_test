@@ -19,19 +19,17 @@ void main() {
 
   Widget createWidgetUnderTest() {
     return ProviderScope(
-      overrides: [
-        imageRepositoryProvider.overrideWithValue(mockRepository),
-      ],
-      child: const MaterialApp(
-        home: ImageScreen(),
-      ),
+      overrides: [imageRepositoryProvider.overrideWithValue(mockRepository)],
+      child: const MaterialApp(home: ImageScreen()),
     );
   }
 
   testWidgets('displays loading indicator initially', (tester) async {
     // Arrange
     final completer = Completer<ImageResponse>();
-    when(() => mockRepository.getRandomImage()).thenAnswer((_) => completer.future);
+    when(
+      () => mockRepository.getRandomImage(),
+    ).thenAnswer((_) => completer.future);
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
@@ -39,30 +37,35 @@ void main() {
     // Assert
     // We expect 2 indicators: one in the center, one in the button
     expect(find.byType(CircularProgressIndicator), findsNWidgets(2));
-    
+
     // Cleanup
-    completer.complete(const ImageResponse(url: 'https://example.com/image.jpg'));
+    completer.complete(
+      const ImageResponse(url: 'https://example.com/image.jpg'),
+    );
     await tester.pump();
   });
 
   testWidgets('displays error message when fetching fails', (tester) async {
     // Arrange
-    when(() => mockRepository.getRandomImage()).thenAnswer((_) async => throw Exception('Network Error'));
+    when(
+      () => mockRepository.getRandomImage(),
+    ).thenAnswer((_) async => throw Exception('Network Error'));
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pumpAndSettle(); 
+    await tester.pumpAndSettle();
 
     // Assert
     expect(find.textContaining('Error'), findsOneWidget);
     expect(find.byIcon(Icons.error), findsOneWidget);
   });
 
-
   testWidgets('displays image and button when data is loaded', (tester) async {
     // Arrange
     const tImageResponse = ImageResponse(url: 'https://example.com/image.jpg');
-    when(() => mockRepository.getRandomImage()).thenAnswer((_) async => tImageResponse);
+    when(
+      () => mockRepository.getRandomImage(),
+    ).thenAnswer((_) async => tImageResponse);
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
