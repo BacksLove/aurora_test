@@ -1,12 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/result.dart';
-import '../../../../core/network/dio_provider.dart';
 import '../../domain/repositories/image_repository.dart';
 import '../models/image_response.dart';
-
-part 'image_repository_impl.g.dart';
 
 class ImageRepositoryImpl implements ImageRepository {
   final Dio _dio;
@@ -75,10 +71,4 @@ class ImageRepositoryImpl implements ImageRepository {
         );
     }
   }
-}
-
-@riverpod
-ImageRepository imageRepository(Ref ref) {
-  final dio = ref.watch(dioProvider);
-  return ImageRepositoryImpl(dio);
 }

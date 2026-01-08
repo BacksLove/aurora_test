@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_engineer_assignment/core/di/providers.dart';
 import 'package:mobile_engineer_assignment/core/errors/result.dart';
 import 'package:mobile_engineer_assignment/features/random_image/data/models/image_response.dart';
 import 'package:mobile_engineer_assignment/features/random_image/domain/usecases/get_random_image_usecase.dart';

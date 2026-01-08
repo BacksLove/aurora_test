@@ -272,12 +272,7 @@ Image optimization parameters:
 
 - ✅ Android
 - ✅ iOS
-- ✅ Web
-- ✅ macOS
-- ✅ Linux
-- ✅ Windows
 
 ## 📄 License
 
 This project is part of a technical assignment.
-

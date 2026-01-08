@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/di/providers.dart';
 import '../../../../core/errors/result.dart';
 import '../../data/models/image_response.dart';
-import '../../domain/usecases/get_random_image_usecase.dart';
 
 part 'random_image_provider.g.dart';
 
@@ -18,7 +18,9 @@ class RandomImage extends _$RandomImage {
 
     return switch (result) {
       Success(value: final imageResponse) => imageResponse,
-      Error(failure: final failure) => throw Exception(failure.message),
+      // Throw the typed Failure to preserve error type information
+      // UI can pattern match on Failure type for specific error handling
+      Error(failure: final failure) => throw failure,
     };
   }
 

@@ -1,11 +1,7 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/result.dart';
 import '../../data/models/image_response.dart';
-import '../../data/repositories/image_repository_impl.dart';
 import '../repositories/image_repository.dart';
-
-part 'get_random_image_usecase.g.dart';
 
 /// UseCase for fetching a random image
 ///
@@ -61,10 +57,4 @@ class GetRandomImageUseCase {
     // All business rules passed
     return Success(response);
   }
-}
-
-@riverpod
-GetRandomImageUseCase getRandomImageUseCase(Ref ref) {
-  final repository = ref.watch(imageRepositoryProvider);
-  return GetRandomImageUseCase(repository);
 }

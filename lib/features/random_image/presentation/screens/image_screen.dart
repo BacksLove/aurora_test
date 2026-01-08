@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:palette_generator/palette_generator.dart';
+import '../../../../core/errors/failures.dart';
 import '../providers/random_image_provider.dart';
 import 'image_screen_constants.dart';
 
@@ -145,6 +146,40 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
     );
   }
 
+  /// Returns a user-friendly error message based on the Failure type
+  String _getErrorMessage(Object error) {
+    if (error is NetworkFailure) {
+      return 'Network Connection Error';
+    } else if (error is TimeoutFailure) {
+      return 'Request Timed Out';
+    } else if (error is ServerFailure) {
+      return 'Server Error ${error.statusCode != null ? "(${error.statusCode})" : ""}';
+    } else if (error is CancelledFailure) {
+      return 'Request Cancelled';
+    } else if (error is UnexpectedFailure) {
+      return 'Unexpected Error';
+    } else {
+      return 'Error: ${error.toString()}';
+    }
+  }
+
+  /// Returns a helpful hint based on the Failure type
+  String _getErrorHint(Object error) {
+    if (error is NetworkFailure) {
+      return 'Please check your internet connection and try again';
+    } else if (error is TimeoutFailure) {
+      return 'The server took too long to respond. Please try again';
+    } else if (error is ServerFailure) {
+      return 'The server encountered an error. Please try again later';
+    } else if (error is CancelledFailure) {
+      return 'The request was cancelled';
+    } else if (error is UnexpectedFailure) {
+      return error.message;
+    } else {
+      return 'Please try again';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final imageState = ref.watch(randomImageProvider);
@@ -204,7 +239,24 @@ class _ImageScreenState extends ConsumerState<ImageScreen> {
                         SizedBox(
                           height: ImageScreenConstants.layout.spacingLarge,
                         ),
-                        Text('Error: $error'),
+                        Text(
+                          _getErrorMessage(error),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: _getTextColorForBackground()),
+                        ),
+                        SizedBox(
+                          height: ImageScreenConstants.layout.spacingMedium,
+                        ),
+                        Text(
+                          _getErrorHint(error),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _getTextColorForBackground().withOpacity(
+                              0.7,
+                            ),
+                            fontSize: 12.0,
+                          ),
+                        ),
                       ],
                     ),
                   ),
